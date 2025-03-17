@@ -1,0 +1,8 @@
+{
+    "model_name": "gemini-1.5-pro",
+    "books_dir": "books",
+    "history_file": "question_history.jsonl",
+    "cache_size": 100,
+    "similarity_threshold": 0.7,
+    "logging_level": "INFO"
+} 
