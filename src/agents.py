@@ -78,7 +78,7 @@ class RAGAgent:
             RunnablePassthrough.assign(
                 context=lambda x: self._get_context(
                     query=x["search_query"],
-                    k=10,  # Retrieve more documents initially
+                    k=1000,  # Retrieve more documents initially
                     search_plan=x.get("search_plan", None)
                 )
             )
@@ -88,7 +88,7 @@ class RAGAgent:
             | StrOutputParser()
         )
     
-    def _get_context(self, query: str, k: int = 10, search_plan: Optional[SearchPlan] = None) -> str:
+    def _get_context(self, query: str, k: int = 1000, search_plan: Optional[SearchPlan] = None) -> str:
         """Get context from vector store.
         
         Args:
