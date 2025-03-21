@@ -78,7 +78,7 @@ class RAGAgent:
             RunnablePassthrough.assign(
                 context=lambda x: self._get_context(
                     query=x["search_query"],
-                    k=1000,  # Retrieve more documents initially
+                    k=100,  # Retrieve more documents initially
                     search_plan=x.get("search_plan", None)
                 )
             )
@@ -88,7 +88,7 @@ class RAGAgent:
             | StrOutputParser()
         )
     
-    def _get_context(self, query: str, k: int = 1000, search_plan: Optional[SearchPlan] = None) -> str:
+    def _get_context(self, query: str, k: int = 100, search_plan: Optional[SearchPlan] = None) -> str:
         """Get context from vector store.
         
         Args:
@@ -549,7 +549,7 @@ DO NOT skip any of the sections. ALL sections MUST be present with meaningful co
             # Get the vector search results
             documents = self.vector_store.similarity_search(
                 search_plan.reformulated_query, 
-                k=1000  # Retrieving enough documents but not too many
+                k=100  # Retrieving enough documents but not too many
             )
             
             # Evaluate search quality

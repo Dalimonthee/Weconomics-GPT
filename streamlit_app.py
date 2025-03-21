@@ -268,7 +268,7 @@ def display_search_quality(search_quality: Dict[str, Any]):
     col1, col2 = st.columns(2)
     
     with col1:
-        st.metric("Documents Found", search_quality.get('found_documents', 0))
+        st.metric("Sources Found", search_quality.get('found_documents', 0))
         st.metric("Key Concept Coverage", f"{search_quality.get('key_concept_coverage', 0)}%")
     
     with col2:
@@ -278,7 +278,7 @@ def display_search_quality(search_quality: Dict[str, Any]):
     if 'concept_coverage' in search_quality:
         st.markdown("**Concept Coverage Details:**")
         for concept, count in search_quality['concept_coverage'].items():
-            st.markdown(f"- '{concept}': found in {count} documents")
+            st.markdown(f"- '{concept}': found in {count} sources")
 
 
 # Main query input - with key to avoid conflicts
