@@ -294,6 +294,11 @@ class RAGAgent:
         try:
             logger.info("Executing RAG chain")
             response = self.chain.invoke(chain_input)
+            
+            # Handle AIMessage object by extracting the content if needed
+            if hasattr(response, 'content'):
+                response = response.content
+                
             logger.info("RAG chain execution completed successfully")
             return response
         except Exception as e:
@@ -481,8 +486,15 @@ DO NOT skip any of the sections. ALL sections MUST be present with meaningful co
             # Generate the search plan using the planning LLM
             formatted_prompt = self.planning_prompt.format(query=cleaned_query)
             logger.info("Sending prompt to planning LLM")
-            plan_text = self.planning_llm.invoke(formatted_prompt)
-            logger.info(f"Received plan from LLM: {len(plan_text)} characters")
+            plan_text_response = self.planning_llm.invoke(formatted_prompt)
+            
+            # Handle AIMessage object by extracting the content
+            if hasattr(plan_text_response, 'content'):
+                plan_text = plan_text_response.content
+            else:
+                plan_text = str(plan_text_response)
+                
+            logger.info(f"Received plan from LLM ({len(plan_text)} characters)")
             
             # Parse the plan text into a SearchPlan object
             search_plan = self._parse_search_plan(plan_text, cleaned_query)

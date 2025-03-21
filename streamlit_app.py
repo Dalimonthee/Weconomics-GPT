@@ -9,6 +9,11 @@ from typing import Dict, Any, List, Optional
 # Add the current directory to the path so we can import our modules
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+# Set environment variables from Streamlit secrets
+if hasattr(st, "secrets") and "env" in st.secrets:
+    for key, value in st.secrets.env.items():
+        os.environ[key] = str(value)
+
 # Import our RAG components
 from src.agents import AgentManager
 from src.vector_store import SupabaseVectorStoreManager
@@ -76,6 +81,22 @@ with st.sidebar:
         help="Show detailed information about the search process"
     )
     
+    # Environment variable check
+    with st.expander("Environment Status"):
+        supabase_url = "✅ Set" if config.supabase.url else "❌ Missing"
+        supabase_key = "✅ Set" if config.supabase.key else "❌ Missing"
+        google_api_key = "✅ Set" if config.gemini.api_key else "❌ Missing"
+        embedding_dim = config.embedding_dimension
+        
+        st.markdown("### Environment Variables")
+        st.markdown(f"- SUPABASE_URL: {supabase_url}")
+        st.markdown(f"- SUPABASE_KEY: {supabase_key}")
+        st.markdown(f"- GOOGLE_API_KEY: {google_api_key}")
+        st.markdown(f"- EMBEDDING_DIMENSION: {embedding_dim}")
+        
+        if not (config.supabase.url and config.supabase.key and config.gemini.api_key):
+            st.error("Some required environment variables are missing. Please check your configuration.")
+    
     # Show Supabase stats - use st.button with key to avoid conflicts
     if st.button("Show Database Statistics", key="db_stats"):
         try:
@@ -103,10 +124,28 @@ with st.sidebar:
     st.caption("Powered by Google Gemini + Supabase Vector Store")
 
 
-# Query function with asyncio - with error handling
+# Process query function with asyncio - with error handling
 async def process_query(query: str, min_length: int, force_refresh: bool) -> Dict[str, Any]:
     """Process a query through the RAG system."""
     try:
+        # Check environment variables first
+        if not config.supabase.url or not config.supabase.key or not config.gemini.api_key:
+            missing_vars = []
+            if not config.supabase.url:
+                missing_vars.append("SUPABASE_URL")
+            if not config.supabase.key:
+                missing_vars.append("SUPABASE_KEY")
+            if not config.gemini.api_key:
+                missing_vars.append("GOOGLE_API_KEY")
+                
+            error_msg = f"Missing required environment variables: {', '.join(missing_vars)}"
+            return {
+                "final_response": f"Error: {error_msg}. Please configure these in your Streamlit cloud settings.",
+                "sources": [],
+                "search_plan": {},
+                "search_quality": {}
+            }
+        
         vector_store = SupabaseVectorStoreManager(min_content_length=min_length, force_refresh=force_refresh)
         manager = AgentManager(vector_store=vector_store)
         result = await manager.process_query(query)
@@ -130,6 +169,23 @@ def run_async_query(query: str, min_length: int, force_refresh: bool) -> Dict[st
         result = loop.run_until_complete(process_query(query, min_length, force_refresh))
         loop.close()
         return result
+    except TypeError as e:
+        if "AIMessage" in str(e):
+            st.error("Error with LLM response format. This is likely due to a change in the LangChain or Gemini API.")
+            return {
+                "final_response": "Error: The LLM returned a response in an unexpected format. The system has been updated to handle this, please try again.",
+                "sources": [],
+                "search_plan": {},
+                "search_quality": {}
+            }
+        else:
+            st.error(f"Type error: {str(e)}")
+            return {
+                "final_response": f"Error: {str(e)}",
+                "sources": [],
+                "search_plan": {},
+                "search_quality": {}
+            }
     except Exception as e:
         st.error(f"Error running query: {str(e)}")
         return {
@@ -238,58 +294,48 @@ if st.button("Get Answer", type="primary", key="submit_button"):
     if not query:
         st.warning("Please enter a question.")
     else:
-        # Check environment variables
-        if not config.supabase.url or not config.supabase.key or not config.gemini.api_key:
-            st.error("Missing required environment variables. Please check your .env file.")
-            st.markdown("""
-            ### Required environment variables:
-            - `SUPABASE_URL`: Your Supabase URL
-            - `SUPABASE_KEY`: Your Supabase service role key
-            - `GOOGLE_API_KEY`: Your Google Gemini API key
-            """)
-        else:
-            # Show processing message
-            with st.spinner("🧠 Processing your question..."):
-                try:
-                    # Process the query
-                    result = run_async_query(query, min_length, force_refresh)
+        # Show processing message
+        with st.spinner("🧠 Processing your question..."):
+            try:
+                # Process the query
+                result = run_async_query(query, min_length, force_refresh)
+                
+                # Display the answer
+                st.markdown("## 🤖 Answer")
+                st.markdown(result.get("final_response", "No response generated."))
+                
+                # Horizontal rule
+                st.markdown("---")
+                
+                # Create tabs for the detailed information
+                if verbose:
+                    tab1, tab2, tab3 = st.tabs(["Search Strategy", "Search Quality", "Sources"])
                     
-                    # Display the answer
-                    st.markdown("## 🤖 Answer")
-                    st.markdown(result.get("final_response", "No response generated."))
+                    with tab1:
+                        if "search_plan" in result:
+                            display_search_plan(result["search_plan"])
                     
-                    # Horizontal rule
-                    st.markdown("---")
+                    with tab2:
+                        if "search_quality" in result:
+                            display_search_quality(result["search_quality"])
                     
-                    # Create tabs for the detailed information
-                    if verbose:
-                        tab1, tab2, tab3 = st.tabs(["Search Strategy", "Search Quality", "Sources"])
-                        
-                        with tab1:
-                            if "search_plan" in result:
-                                display_search_plan(result["search_plan"])
-                        
-                        with tab2:
-                            if "search_quality" in result:
-                                display_search_quality(result["search_quality"])
-                        
-                        with tab3:
-                            if "sources" in result:
-                                keywords = []
-                                if "search_plan" in result and "key_concepts" in result["search_plan"]:
-                                    keywords = result["search_plan"]["key_concepts"]
-                                display_sources(result["sources"], keywords)
-                    else:
-                        # Just show the sources in compact mode
+                    with tab3:
                         if "sources" in result:
                             keywords = []
                             if "search_plan" in result and "key_concepts" in result["search_plan"]:
                                 keywords = result["search_plan"]["key_concepts"]
                             display_sources(result["sources"], keywords)
-                
-                except Exception as e:
-                    st.error(f"Error processing query: {str(e)}")
-                    st.write("Please check your configuration and try again.")
+                else:
+                    # Just show the sources in compact mode
+                    if "sources" in result:
+                        keywords = []
+                        if "search_plan" in result and "key_concepts" in result["search_plan"]:
+                            keywords = result["search_plan"]["key_concepts"]
+                        display_sources(result["sources"], keywords)
+            
+            except Exception as e:
+                st.error(f"Error processing query: {str(e)}")
+                st.write("Please check your configuration and try again.")
 
 # Footer
 st.markdown("---")
