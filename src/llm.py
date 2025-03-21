@@ -101,8 +101,8 @@ def _format_search_guidance(search_plan: Optional[Any]) -> str:
         SEARCH GUIDANCE:
         {guidance_text}
         
-        KEY CONCEPTS TO FOCUS ON:
-        {', '.join(search_plan.key_concepts)}
+        KEYWORDS TO FOCUS ON:
+        {', '.join(search_plan.keywords)}
         
         AREAS TO EXPLORE:
         {', '.join(search_plan.focus_areas)}
@@ -222,7 +222,7 @@ def create_manager_prompt() -> ChatPromptTemplate:
             """User query: {query}
             
             Please analyze this query and determine the best approach to find relevant information.
-            Identify the key concepts, terminology, and focus areas that should be searched.
+            Identify the keywords, terminology, and focus areas that should be searched.
             Then create a specific, targeted search plan.
             """
         ),

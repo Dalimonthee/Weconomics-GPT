@@ -36,7 +36,7 @@ class SearchPlan:
     
     reformulated_query: str
     focus_areas: List[str]
-    key_concepts: List[str]
+    keywords: List[str]
     guidance: str
     priority_filters: Dict[str, Any] = field(default_factory=dict)
 
@@ -179,16 +179,16 @@ class RAGAgent:
         if not documents:
             return documents
             
-        # Score documents based on relevance to key concepts
+        # Score documents based on relevance to keywords
         scored_docs = []
         for doc in documents:
             score = 0
             content = doc.page_content.lower()
             
-            # Score based on key concepts presence
-            for concept in search_plan.key_concepts:
-                if concept.lower() in content:
-                    score += 3  # Higher weight for key concepts
+            # Score based on keywords presence
+            for keyword in search_plan.keywords:
+                if keyword.lower() in content:
+                    score += 3  # Higher weight for keywords
             
             # Score based on focus areas
             for area in search_plan.focus_areas:
@@ -225,7 +225,7 @@ class RAGAgent:
             return {
                 "found_documents": 0,
                 "avg_document_length": 0,
-                "key_concept_coverage": 0,
+                "keyword_coverage": 0,
                 "assessment": "No documents found"
             }
         
@@ -233,17 +233,17 @@ class RAGAgent:
         total_length = sum(len(doc.page_content) for doc in documents)
         avg_length = total_length / len(documents)
         
-        # Check concept coverage
-        concept_coverage = {}
-        for concept in search_plan.key_concepts:
-            concept_lower = concept.lower()
-            matches = sum(1 for doc in documents if concept_lower in doc.page_content.lower())
-            concept_coverage[concept] = matches
+        # Check keyword coverage
+        keyword_coverage = {}
+        for keyword in search_plan.keywords:
+            keyword_lower = keyword.lower()
+            matches = sum(1 for doc in documents if keyword_lower in doc.page_content.lower())
+            keyword_coverage[keyword] = matches
         
-        # Calculate percentage of concepts covered
-        concepts_found = sum(1 for count in concept_coverage.values() if count > 0)
-        total_concepts = len(search_plan.key_concepts) if search_plan.key_concepts else 1
-        coverage_percentage = (concepts_found / total_concepts) * 100 if total_concepts > 0 else 0
+        # Calculate percentage of keywords covered
+        keywords_found = sum(1 for count in keyword_coverage.values() if count > 0)
+        total_keywords = len(search_plan.keywords) if search_plan.keywords else 1
+        coverage_percentage = (keywords_found / total_keywords) * 100 if total_keywords > 0 else 0
         
         # Determine quality assessment
         if coverage_percentage >= 80:
@@ -258,8 +258,8 @@ class RAGAgent:
         return {
             "found_documents": len(documents),
             "avg_document_length": avg_length,
-            "key_concept_coverage": round(coverage_percentage),
-            "concept_coverage": concept_coverage,
+            "keyword_coverage": round(coverage_percentage),
+            "keyword_coverage": keyword_coverage,
             "assessment": assessment
         }
     
@@ -342,11 +342,11 @@ FOCUS_AREAS:
 - <Focus area 2>
 - <Focus area 3>
 
-KEY_CONCEPTS:
-- <Key concept 1>
-- <Key concept 2>
-- <Key concept 3>
-- <Key concept 4>
+KEYWORDS:
+- <Keyword 1>
+- <Keyword 2>
+- <Keyword 3>
+- <Keyword 4>
 
 GUIDANCE:
 <Write detailed guidance for analyzing and prioritizing information>
@@ -355,7 +355,7 @@ GUIDANCE:
 INSTRUCTIONS:
 1. The REFORMULATED_QUERY must be clear, specific and directly related to blockchain or the user's query
 2. FOCUS_AREAS should identify 3-5 specific aspects to investigate
-3. KEY_CONCEPTS should list 3-7 important terms to find in documents
+3. KEYWORDS should list 3-7 important words to find in documents
 4. GUIDANCE should provide detailed instructions for analyzing information
 
 Remember, the REFORMULATED_QUERY is extremely important and must NEVER be empty. 
@@ -380,7 +380,7 @@ DO NOT skip any of the sections. ALL sections MUST be present with meaningful co
         # Initialize default values
         reformulated_query = ""
         focus_areas = []
-        key_concepts = []
+        keywords = []
         guidance = ""
         priority_filters = {}
         
@@ -396,7 +396,7 @@ DO NOT skip any of the sections. ALL sections MUST be present with meaningful co
         if "FOCUS_AREAS:" in plan_text:
             parts = plan_text.split("FOCUS_AREAS:")
             if len(parts) > 1:
-                areas_section = parts[1].split("KEY_CONCEPTS:" if "KEY_CONCEPTS:" in parts[1] else "GUIDANCE:")[0]
+                areas_section = parts[1].split("KEYWORDS:" if "KEYWORDS:" in parts[1] else "GUIDANCE:")[0]
                 for line in areas_section.strip().split("\n"):
                     if line.strip().startswith("-"):
                         area = line.strip()[1:].strip()
@@ -404,17 +404,17 @@ DO NOT skip any of the sections. ALL sections MUST be present with meaningful co
                             focus_areas.append(area)
             logger.info(f"Extracted {len(focus_areas)} focus areas")
         
-        # Extract key concepts
-        if "KEY_CONCEPTS:" in plan_text:
-            parts = plan_text.split("KEY_CONCEPTS:")
+        # Extract keywords
+        if "KEYWORDS:" in plan_text:
+            parts = plan_text.split("KEYWORDS:")
             if len(parts) > 1:
                 concepts_section = parts[1].split("GUIDANCE:")[0] if "GUIDANCE:" in parts[1] else parts[1]
                 for line in concepts_section.strip().split("\n"):
                     if line.strip().startswith("-"):
-                        concept = line.strip()[1:].strip()
-                        if concept:
-                            key_concepts.append(concept)
-            logger.info(f"Extracted {len(key_concepts)} key concepts")
+                        keyword = line.strip()[1:].strip()
+                        if keyword:
+                            keywords.append(keyword)
+            logger.info(f"Extracted {len(keywords)} keywords")
         
         # Extract guidance
         if "GUIDANCE:" in plan_text:
@@ -427,11 +427,11 @@ DO NOT skip any of the sections. ALL sections MUST be present with meaningful co
         if not reformulated_query or reformulated_query.strip() == "":
             logger.warning("Reformulated query is empty, creating fallback")
             
-            # First try to use key concepts
-            if key_concepts:
-                reformulated_query = " ".join(key_concepts[:3])
-                logger.info(f"Created fallback query from key concepts: '{reformulated_query}'")
-            # If key concepts are also empty, just use the original query
+            # First try to use keywords
+            if keywords:
+                reformulated_query = " ".join(keywords[:3])
+                logger.info(f"Created fallback query from keywords: '{reformulated_query}'")
+            # If keywords are also empty, just use the original query
             else:
                 reformulated_query = original_query if original_query else "blockchain definition"
                 logger.info(f"Using original query as fallback: '{reformulated_query}'")
@@ -444,10 +444,10 @@ DO NOT skip any of the sections. ALL sections MUST be present with meaningful co
             else:
                 focus_areas = ["Technical aspects", "Applications", "Key features"]
         
-        # Add default key concepts if none were extracted
-        if not key_concepts:
-            logger.warning("No key concepts found, adding defaults")
-            key_concepts = ["blockchain", "distributed ledger", "decentralization", "consensus mechanism"]
+        # Add default keywords if none were extracted
+        if not keywords:
+            logger.warning("No keywords found, adding defaults")
+            keywords = ["blockchain", "distributed ledger", "decentralization", "consensus mechanism"]
         
         # Add default guidance if none was extracted
         if not guidance or guidance.strip() == "":
@@ -458,7 +458,7 @@ DO NOT skip any of the sections. ALL sections MUST be present with meaningful co
         return SearchPlan(
             reformulated_query=reformulated_query,
             focus_areas=focus_areas,
-            key_concepts=key_concepts,
+            keywords=keywords,
             guidance=guidance,
             priority_filters=priority_filters
         )
@@ -503,7 +503,7 @@ DO NOT skip any of the sections. ALL sections MUST be present with meaningful co
             logger.info(f"Created search plan:")
             logger.info(f"  Reformulated query: '{search_plan.reformulated_query}'")
             logger.info(f"  Focus areas: {search_plan.focus_areas}")
-            logger.info(f"  Key concepts: {search_plan.key_concepts}")
+            logger.info(f"  Keywords: {search_plan.keywords}")
             
             return search_plan
             
@@ -513,7 +513,7 @@ DO NOT skip any of the sections. ALL sections MUST be present with meaningful co
             return SearchPlan(
                 reformulated_query=cleaned_query,
                 focus_areas=["Basic concepts", "Technical aspects", "Applications"],
-                key_concepts=["blockchain", "distributed ledger", "decentralization", "consensus"],
+                keywords=["blockchain", "distributed ledger", "decentralization", "consensus"],
                 guidance="Look for clear definitions and explanations that directly answer the query."
             )
     
@@ -540,7 +540,7 @@ DO NOT skip any of the sections. ALL sections MUST be present with meaningful co
             trace["search_plan"] = {
                 "reformulated_query": search_plan.reformulated_query,
                 "focus_areas": search_plan.focus_areas,
-                "key_concepts": search_plan.key_concepts
+                "keywords": search_plan.keywords
             }
             
             # Get a response from the RAG agent
@@ -576,7 +576,7 @@ DO NOT skip any of the sections. ALL sections MUST be present with meaningful co
                 "search_plan": {
                     "reformulated_query": search_plan.reformulated_query,
                     "focus_areas": search_plan.focus_areas,
-                    "key_concepts": search_plan.key_concepts,
+                    "keywords": search_plan.keywords,
                     "guidance": search_plan.guidance
                 },
                 "search_quality": search_quality
@@ -592,7 +592,7 @@ DO NOT skip any of the sections. ALL sections MUST be present with meaningful co
                 "search_plan": {
                     "reformulated_query": query,
                     "focus_areas": [],
-                    "key_concepts": [],
+                    "keywords": [],
                     "guidance": "Error occurred during processing."
                 },
                 "search_quality": {

@@ -232,13 +232,13 @@ def display_search_plan(search_plan: Dict[str, Any]):
         st.markdown("**Reformulated Query:**")
         st.info(search_plan.get('reformulated_query', 'N/A'))
         
-        st.markdown("**Key Concepts:**")
-        concepts = search_plan.get('key_concepts', [])
-        if concepts:
-            for concept in concepts:
-                st.markdown(f"- {concept}")
+        st.markdown("**Keywords:**")
+        keywords = search_plan.get('keywords', [])
+        if keywords:
+            for keyword in keywords:
+                st.markdown(f"- {keyword}")
         else:
-            st.markdown("No key concepts identified.")
+            st.markdown("No keywords identified.")
     
     with col2:
         st.markdown("**Focus Areas:**")
@@ -269,16 +269,16 @@ def display_search_quality(search_quality: Dict[str, Any]):
     
     with col1:
         st.metric("Sources Found", search_quality.get('found_documents', 0))
-        st.metric("Key Concept Coverage", f"{search_quality.get('key_concept_coverage', 0)}%")
+        st.metric("Keyword Coverage", f"{search_quality.get('keyword_coverage', 0)}%")
     
     with col2:
         st.metric("Avg Document Length", f"{int(search_quality.get('avg_document_length', 0))} chars")
         st.metric("Quality Assessment", search_quality.get('assessment', 'Unknown'))
     
-    if 'concept_coverage' in search_quality:
-        st.markdown("**Concept Coverage Details:**")
-        for concept, count in search_quality['concept_coverage'].items():
-            st.markdown(f"- '{concept}': found in {count} sources")
+    if 'keyword_coverage' in search_quality and isinstance(search_quality['keyword_coverage'], dict):
+        st.markdown("**Keyword Coverage Details:**")
+        for keyword, count in search_quality['keyword_coverage'].items():
+            st.markdown(f"- '{keyword}': found in {count} sources")
 
 
 # Main query input - with key to avoid conflicts
@@ -322,15 +322,15 @@ if st.button("Get Answer", type="primary", key="submit_button"):
                     with tab3:
                         if "sources" in result:
                             keywords = []
-                            if "search_plan" in result and "key_concepts" in result["search_plan"]:
-                                keywords = result["search_plan"]["key_concepts"]
+                            if "search_plan" in result and "keywords" in result["search_plan"]:
+                                keywords = result["search_plan"]["keywords"]
                             display_sources(result["sources"], keywords)
                 else:
                     # Just show the sources in compact mode
                     if "sources" in result:
                         keywords = []
-                        if "search_plan" in result and "key_concepts" in result["search_plan"]:
-                            keywords = result["search_plan"]["key_concepts"]
+                        if "search_plan" in result and "keywords" in result["search_plan"]:
+                            keywords = result["search_plan"]["keywords"]
                         display_sources(result["sources"], keywords)
             
             except Exception as e:

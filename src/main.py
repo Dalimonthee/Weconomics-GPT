@@ -43,9 +43,9 @@ def display_search_plan(search_plan: Dict[str, Any]):
     for area in search_plan.get('focus_areas', []):
         print(f"- {area}")
     
-    print("\nKey Concepts:")
-    for concept in search_plan.get('key_concepts', []):
-        print(f"- {concept}")
+    print("\nKeywords:")
+    for keyword in search_plan.get('keywords', []):
+        print(f"- {keyword}")
     
     print("\nGuidance for Agent:")
     guidance = search_plan.get('guidance', '')
@@ -66,16 +66,16 @@ def display_search_quality(search_quality: Dict[str, Any]):
     print(f"Documents found: {search_quality.get('found_documents', 0)}")
     print(f"Average document length: {int(search_quality.get('avg_document_length', 0))} characters")
     
-    coverage = search_quality.get('key_concept_coverage', 0)
-    print(f"Key concept coverage: {coverage}%")
+    coverage = search_quality.get('keyword_coverage', 0)
+    print(f"Keyword coverage: {coverage}%")
     
     assessment = search_quality.get('assessment', 'Unknown')
     print(f"Quality assessment: {assessment}")
     
-    if 'concept_coverage' in search_quality:
-        print("\nConcept Coverage Details:")
-        for concept, count in search_quality['concept_coverage'].items():
-            print(f"- '{concept}': found in {count} documents")
+    if 'keyword_coverage' in search_quality and isinstance(search_quality['keyword_coverage'], dict):
+        print("\nKeyword Coverage Details:")
+        for keyword, count in search_quality['keyword_coverage'].items():
+            print(f"- '{keyword}': found in {count} documents")
     
     print("-" * 40)
 
@@ -171,15 +171,15 @@ async def interactive_session(min_content_length: int = 200, force_refresh: bool
                     content = source['content']
                     content_preview = content[:150] + "..." if len(content) > 150 else content
                     
-                    # Highlight key concepts in preview
+                    # Highlight keywords in preview
                     if "search_plan" in response:
-                        key_concepts = response["search_plan"].get("key_concepts", [])
-                        for concept in key_concepts:
-                            if concept.lower() in content_preview.lower():
-                                pattern = re.compile(re.escape(concept), re.IGNORECASE)
-                                content_preview = pattern.sub(f"**{concept.upper()}**", content_preview)
+                        keywords = response["search_plan"].get("keywords", [])
+                        for keyword in keywords:
+                            if keyword.lower() in content_preview.lower():
+                                pattern = re.compile(re.escape(keyword), re.IGNORECASE)
+                                content_preview = pattern.sub(f"**{keyword.upper()}**", content_preview)
                     
-                    # Also highlight keywords in preview
+                    # Also highlight extracted keywords in preview if different from search plan keywords
                     for keyword in keywords:
                         if keyword in content_preview.lower() and f"**{keyword.upper()}**" not in content_preview.upper():
                             pattern = re.compile(re.escape(keyword), re.IGNORECASE)
