@@ -549,7 +549,7 @@ DO NOT skip any of the sections. ALL sections MUST be present with meaningful co
             # Get the vector search results
             documents = self.vector_store.similarity_search(
                 search_plan.reformulated_query, 
-                k=8  # Retrieving enough documents but not too many
+                k=1000  # Retrieving enough documents but not too many
             )
             
             # Evaluate search quality
