@@ -1,0 +1,42 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Weconomics Admin') }}{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static 'css/custom_admin.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    #header {
+      height: auto;
+      padding: 15px 40px;
+    }
+    
+    #branding h1 {
+      font-weight: 400;
+    }
+    
+    #user-tools {
+      margin-top: 5px;
+    }
+    
+    .dashboard .module {
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-radius: 4px;
+      border: none;
+      overflow: hidden;
+    }
+  </style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+  <a href="{% url 'admin:index' %}">
+    <i class="fas fa-database me-2"></i> {{ site_header|default:_('Weconomics AI Administration') }}
+  </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %} 

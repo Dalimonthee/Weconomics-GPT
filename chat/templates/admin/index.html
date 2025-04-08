@@ -1,0 +1,47 @@
+{% extends "admin/index.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="module" style="margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden;">
+    <h2 class="knowledge-management">Knowledge Management</h2>
+    <div style="padding: 20px;">
+        <p style="margin-bottom: 20px;">
+            Use the Source Management interface to add, edit, and process knowledge sources that will be used by the AI to answer questions.
+        </p>
+        
+        <div class="knowledge-stats" style="margin-bottom: 20px;">
+            <div class="stat-box">
+                <div style="font-size: 36px; color: #3498db;"><i class="fas fa-database"></i></div>
+                <div class="stat-label">Manage Sources</div>
+                <div style="font-size: 12px; margin-top: 5px;">Add and organize AI knowledge</div>
+            </div>
+            <div class="stat-box">
+                <div style="font-size: 36px; color: #2ecc71;"><i class="fas fa-file-alt"></i></div>
+                <div class="stat-label">Upload Documents</div>
+                <div style="font-size: 12px; margin-top: 5px;">Add files to knowledge base</div>
+            </div>
+            <div class="stat-box">
+                <div style="font-size: 36px; color: #e74c3c;"><i class="fas fa-cogs"></i></div>
+                <div class="stat-label">Process Data</div>
+                <div style="font-size: 12px; margin-top: 5px;">Prepare content for AI</div>
+            </div>
+            <div class="stat-box">
+                <div style="font-size: 36px; color: #f39c12;"><i class="fas fa-users"></i></div>
+                <div class="stat-label">Manage Users</div>
+                <div style="font-size: 12px; margin-top: 5px;">User administration</div>
+            </div>
+        </div>
+        
+        <div class="submit-row" style="margin: 0; padding: 0; text-align: center;">
+            <a href="{% url 'admin:source_management' %}" class="button default" style="font-size: 14px; padding: 10px 20px;">
+                <i class="fas fa-database me-2"></i> Manage Knowledge Sources
+            </a>
+            <a href="{% url 'admin:auth_user_changelist' %}" class="button" style="font-size: 14px; padding: 10px 20px; margin-left: 10px;">
+                <i class="fas fa-users me-2"></i> Manage Users
+            </a>
+        </div>
+    </div>
+</div>
+
+{{ block.super }}
+{% endblock %} 

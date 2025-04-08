@@ -1,0 +1,56 @@
+{% extends 'chat/base.html' %}
+
+{% block title %}Your Conversations - Weconomics AI Chat{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-comments me-2"></i>Your Conversations</h5>
+                <a href="{% url 'new_conversation' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i> New Conversation
+                </a>
+            </div>
+
+            <div class="card-body p-0">
+                {% if conversations %}
+                    <div class="list-group list-group-flush">
+                        {% for conversation in conversations %}
+                            <a href="{% url 'conversation_detail' conversation.id %}" class="list-group-item list-group-item-action border-start-0 border-end-0">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ conversation.title }}</h6>
+                                    <small class="text-muted">{{ conversation.updated_at|date:"M d, Y H:i" }}</small>
+                                </div>
+                                {% with last_message=conversation.messages.last %}
+                                    {% if last_message %}
+                                        <p class="mb-1 text-truncate">
+                                            <span class="badge {% if last_message.sender == 'user' %}bg-primary{% else %}bg-secondary{% endif %} me-1">
+                                                <i class="fas {% if last_message.sender == 'user' %}fa-user{% else %}fa-robot{% endif %}"></i>
+                                                {{ last_message.sender|title }}
+                                            </span>
+                                            {{ last_message.message }}
+                                        </p>
+                                        <small class="text-muted">{{ last_message.timestamp|date:"M d, Y H:i" }}</small>
+                                    {% else %}
+                                        <p class="mb-1 text-muted fst-italic">No messages yet</p>
+                                    {% endif %}
+                                {% endwith %}
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
+                        <h5>No conversations yet</h5>
+                        <p class="text-muted mb-4">Start a new conversation to chat with Weconomics AI</p>
+                        <a href="{% url 'new_conversation' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i> Start a Conversation
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

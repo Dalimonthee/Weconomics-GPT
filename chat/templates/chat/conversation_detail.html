@@ -1,0 +1,267 @@
+{% extends 'chat/base.html' %}
+
+{% block title %}{{ conversation.title }} - Weconomics AI Chat{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0"><i class="fas fa-comments me-2"></i>{{ conversation.title }}</h5>
+                    <small class="text-muted">Started {{ conversation.created_at|date:"M d, Y" }}</small>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="conversationActions" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="conversationActions">
+                        <li><a class="dropdown-item" href="{% url 'rename_conversation' conversation.id %}">
+                            <i class="fas fa-edit me-2"></i> Rename
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'delete_conversation' conversation.id %}">
+                            <i class="fas fa-trash-alt me-2"></i> Delete
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card-body p-0">
+                <div class="chat-container" id="chatContainer">
+                    {% for msg in messages %}
+                        <div class="message {% if msg.sender == 'user' %}user-message{% else %}ai-message{% endif %}">
+                            <div class="message-content">{{ msg.message|linebreaksbr }}</div>
+                            <div class="timestamp">
+                                <i class="fas {% if msg.sender == 'user' %}fa-user{% else %}fa-robot{% endif %} me-1"></i>
+                                {{ msg.timestamp|date:"M d, Y H:i:s" }}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="alert alert-light text-center my-5">
+                            <i class="fas fa-comment-dots fa-2x mb-3 text-muted"></i>
+                            <p>No messages yet. Start the conversation below.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="card-footer bg-white">
+                <div class="question-form">
+                    <div class="mb-3">
+                        <label for="question" class="form-label">
+                            <i class="fas fa-question-circle me-1"></i>Ask a question:
+                        </label>
+                        <textarea class="form-control" id="question" rows="3" placeholder="Type your question here..."></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button id="send-question" class="btn btn-primary" data-conversation-id="{{ conversation.id }}">
+                            <i class="fas fa-paper-plane me-1"></i> Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Typing indicator animation */
+    .typing-dots {
+        display: flex;
+        justify-content: flex-start;
+        padding: 8px 0;
+    }
+    
+    .typing-dots .dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        margin-right: 5px;
+        background-color: #aaa;
+        border-radius: 50%;
+        animation: bounce 1.5s infinite ease-in-out;
+    }
+    
+    .typing-dots .dot:nth-child(1) {
+        animation-delay: 0s;
+    }
+    
+    .typing-dots .dot:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    
+    .typing-dots .dot:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+    
+    @keyframes bounce {
+        0%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-8px); }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const questionTextarea = document.getElementById('question');
+        const sendButton = document.getElementById('send-question');
+        const chatContainer = document.querySelector('.chat-container');
+        const conversationId = sendButton.getAttribute('data-conversation-id');
+
+        // Scroll to bottom of chat on load
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        sendButton.addEventListener('click', function() {
+            sendQuestion();
+        });
+
+        // Add typing indicator
+        function showTypingIndicator() {
+            const typingIndicator = `
+                <div class="message ai-message typing-indicator" id="typing-indicator">
+                    <div class="message-content">
+                        <div class="typing-dots">
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                        </div>
+                    </div>
+                    <div class="timestamp">
+                        <i class="fas fa-robot me-1"></i>
+                        AI is typing...
+                    </div>
+                </div>
+            `;
+            chatContainer.insertAdjacentHTML('beforeend', typingIndicator);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function sendQuestion() {
+            const questionText = questionTextarea.value.trim();
+            if (!questionText) return;
+
+            // Disable input while processing
+            questionTextarea.disabled = true;
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Sending...';
+            
+            // Add user message immediately
+            const userMessageHtml = `
+                <div class="message user-message">
+                    <div class="message-content">${questionText.replace(/\n/g, '<br>')}</div>
+                    <div class="timestamp">
+                        <i class="fas fa-user me-1"></i>
+                        ${new Date().toLocaleString()}
+                    </div>
+                </div>
+            `;
+            chatContainer.insertAdjacentHTML('beforeend', userMessageHtml);
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Clear the textarea
+            questionTextarea.value = '';
+
+            // Send the question to the server
+            fetch('{% url "ask_question" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    question: questionText,
+                    conversation_id: conversationId
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Remove typing indicator
+                removeTypingIndicator();
+                
+                // Add AI response message
+                const aiMessage = data.messages[1]; // The second message is the AI response
+                const messageHtml = `
+                    <div class="message ai-message">
+                        <div class="message-content">${aiMessage.message.replace(/\n/g, '<br>')}</div>
+                        <div class="timestamp">
+                            <i class="fas fa-robot me-1"></i>
+                            ${new Date(aiMessage.timestamp).toLocaleString()}
+                        </div>
+                    </div>
+                `;
+                chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+
+                // Scroll to the bottom of the chat
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            })
+            .catch(error => {
+                // Remove typing indicator
+                removeTypingIndicator();
+                
+                console.error('Error:', error);
+                
+                // Show error message
+                const errorHtml = `
+                    <div class="message ai-message">
+                        <div class="message-content text-danger">
+                            <i class="fas fa-exclamation-circle me-1"></i>
+                            Sorry, there was an error processing your request. Please try again.
+                        </div>
+                    </div>
+                `;
+                chatContainer.insertAdjacentHTML('beforeend', errorHtml);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            })
+            .finally(() => {
+                // Re-enable input
+                questionTextarea.disabled = false;
+                sendButton.disabled = false;
+                sendButton.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Send';
+                questionTextarea.focus();
+            });
+        }
+
+        // Allow sending by pressing Enter (without Shift)
+        questionTextarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendQuestion();
+            }
+        });
+
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %} 

@@ -1,135 +1,96 @@
-# Agentic RAG System
+# Weconomics AI Chat
 
-An advanced agentic Retrieval-Augmented Generation (RAG) system built with LangChain, Google Gemini, and Supabase vector store.
+A Django application that integrates with your college's AI system, providing a user-friendly chat interface with persistent conversation history.
 
-## Overview
+## Features
 
-This system implements a hierarchical approach to RAG systems:
+- User authentication with Django's built-in authentication system
+- Conversation management with persistent storage
+- Integration with external AI services
+- Responsive web interface for asking questions and viewing answers
+- Admin interface for managing users and their conversations
 
-1. **Manager LLM**: Interprets user queries, formulates appropriate search queries, and presents final responses
-2. **Agent LLM**: Performs the actual RAG operations, querying the vector database for relevant information
-3. **RAG System**: Uses Supabase vector store to retrieve documents relevant to queries
+## Setup for Local Development
 
-## Architecture
-
-- **Supabase Vector Store**: Stores and retrieves document embeddings for semantic search
-- **Google Gemini LLMs**: Powers both the manager and agent components
-- **LangChain**: Orchestrates the components together
-
-## Requirements
-
-- Python 3.8+
-- Supabase account with pgvector extension enabled
-- Google Gemini API access
-
-## Setup
-
-1. Clone the repository
-2. Install dependencies:
+1. Clone the repository:
    ```
+   git clone <repository-url>
+   cd weconomics-ai
+   ```
+
+2. Create a virtual environment and install dependencies:
+   ```
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    pip install -r requirements.txt
    ```
-3. Create a `.env` file based on `.env.example`:
+
+3. Run migrations to set up the database:
    ```
-   # Supabase credentials
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_KEY=your_supabase_key
-   
-   # Google Gemini API credentials
-   GOOGLE_API_KEY=your_google_api_key
+   python manage.py migrate
    ```
 
-## Database Setup
+4. Create a superuser for admin access:
+   ```
+   python manage.py createsuperuser
+   ```
 
-This system expects a Supabase table named `documents` with the following structure:
+5. Run the development server:
+   ```
+   python manage.py runserver
+   ```
 
-- `id`: UUID (primary key)
-- `content`: TEXT (document content)
-- `embedding`: VECTOR (document embeddings)
-- `metadata`: JSONB (optional metadata)
+6. Visit http://127.0.0.1:8000/ in your browser.
 
-## Usage
+## Deployment on Render
 
-### CLI Mode
+### Prerequisites
+- A Render account (https://render.com/)
+- A GitHub repository with your Django application
 
-Run the interactive session:
+### Steps
 
-```bash
-python -m src.main
-```
+1. Log in to your Render account and create a new PostgreSQL database:
+   - Go to "New" > "PostgreSQL"
+   - Configure name, region, etc.
+   - Click "Create Database"
+   - Copy the "Internal Database URL" for the next step
 
-### API Mode
+2. Create a new Web Service:
+   - Go to "New" > "Web Service"
+   - Connect to your GitHub repository
+   - Configure the service:
+     - Name: weconomics-ai
+     - Environment: Python 3
+     - Build Command: `pip install -r requirements.txt`
+     - Start Command: `gunicorn weconomics_ai.wsgi:application`
 
-Start the FastAPI server:
+3. Add Environment Variables:
+   - `DATABASE_URL`: Paste the PostgreSQL URL from step 1
+   - `DJANGO_ENV`: production
+   - `DJANGO_SECRET_KEY`: A secure random string
+   - `ALLOWED_HOSTS`: Your Render domain, e.g., `yourdomain.onrender.com`
 
-```bash
-python -m src.api
-```
+4. Deploy the service.
 
-The API will be available at http://localhost:8000 with the following endpoints:
+5. After the first deployment, run migrations:
+   - Go to "Shell" in your web service dashboard
+   - Run: `python manage.py migrate`
+   - Create a superuser: `python manage.py createsuperuser`
 
-- `GET /`: Welcome message
-- `GET /health`: Health check endpoint
-- `POST /query`: Submit a query to the agentic RAG system
+6. Your application is now live at the URL provided by Render.
 
-Example API request:
+## AI Integration
 
-```bash
-curl -X POST "http://localhost:8000/query" \
-     -H "Content-Type: application/json" \
-     -d '{"query": "What is the capital of France?", "max_sources": 3}'
-```
+The current implementation includes a placeholder function `call_ai_service()` in `chat/views.py`, which should be replaced with the actual integration code for your college's AI system.
 
-### Programmatic Usage
+To integrate with your college's AI system:
 
-Import the components into your own application:
-
-```python
-from src.agents import AgentManager
-
-async def my_function():
-    manager = AgentManager()
-    response = await manager.process_query("What is the capital of France?")
-    print(response["final_response"])
-```
-
-## Architecture Diagram
-
-```
-┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
-│                 │         │                 │         │                 │
-│   User Query    │──────►  │  Manager LLM    │──────►  │   Agent LLM     │
-│                 │         │                 │         │                 │
-└─────────────────┘         └─────────────────┘         └────────┬────────┘
-                                     ▲                           │
-                                     │                           ▼
-                                     │                  ┌─────────────────┐
-                                     │                  │                 │
-                                     └──────────────────┤  RAG System     │
-                                                        │                 │
-                                                        └────────┬────────┘
-                                                                 │
-                                                                 ▼
-                                                        ┌─────────────────┐
-                                                        │                 │
-                                                        │ Supabase Vector │
-                                                        │     Store       │
-                                                        │                 │
-                                                        └─────────────────┘
-```
-
-## API Documentation
-
-When running the API server, Swagger UI documentation is available at:
-- http://localhost:8000/docs
-
-ReDoc documentation is available at:
-- http://localhost:8000/redoc
+1. Understand the API contract required by your AI system
+2. Update the `call_ai_service()` function to make the appropriate API calls
+3. Handle any authentication or security requirements
+4. Process the response from the AI system and return it as a string
 
 ## License
 
-MIT
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. 
+[Your License Information] 

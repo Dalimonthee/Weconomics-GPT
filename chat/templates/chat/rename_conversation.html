@@ -1,0 +1,34 @@
+{% extends 'chat/base.html' %}
+
+{% block title %}Rename Conversation - Weconomics AI Chat{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Rename Conversation</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="title" class="form-label">Conversation Title</label>
+                        <input type="text" class="form-control" id="title" name="title" value="{{ conversation.title }}" required autofocus>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'conversation_detail' conversation.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

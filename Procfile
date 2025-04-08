@@ -1,0 +1,1 @@
+web: gunicorn weconomics_ai.wsgi --log-file - 

@@ -1,0 +1,146 @@
+/* Custom Admin CSS with gray colors and gradients */
+:root {
+    --primary-bg-color: #2c3e50;
+    --secondary-bg-color: #34495e;
+    --accent-color: #3498db;
+    --text-color: #ecf0f1;
+    --link-color: #3498db;
+    --link-hover-color: #2980b9;
+    --light-bg-color: #f5f5f5;
+    --border-color: #ddd;
+}
+
+/* Admin header */
+#header {
+    background: linear-gradient(135deg, var(--primary-bg-color) 0%, var(--secondary-bg-color) 100%);
+    color: var(--text-color);
+}
+
+#header a:link, #header a:visited {
+    color: var(--text-color);
+}
+
+/* Module styling */
+.module h2, .module caption, .inline-group h2 {
+    background: linear-gradient(to right, var(--primary-bg-color), var(--secondary-bg-color));
+    color: var(--text-color);
+}
+
+/* Buttons */
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+    background: linear-gradient(to bottom, #5c5c5c 0%, #3d3d3d 100%);
+    color: white;
+    border: 1px solid #2c2c2c;
+}
+
+.button:hover, input[type=submit]:hover, input[type=button]:hover, .submit-row input:hover {
+    background: linear-gradient(to bottom, #666 0%, #444 100%);
+}
+
+.button.default, input[type=submit].default, .submit-row input.default {
+    background: linear-gradient(to bottom, var(--accent-color) 0%, #2980b9 100%);
+}
+
+.button.default:hover, input[type=submit].default:hover, .submit-row input.default:hover {
+    background: linear-gradient(to bottom, #3aa0e6 0%, #2980b9 100%);
+}
+
+/* Table styling */
+#changelist table tbody tr.model-user.is_staff td.field-username {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+#result_list thead th {
+    background: linear-gradient(to bottom, #e3e3e3 0%, #ccc 100%);
+}
+
+/* Dashboard blocks */
+.dashboard .module table th {
+    background: #e6e6e6;
+}
+
+.dashboard .module table:nth-child(2n) th {
+    background: #d3d3d3;
+}
+
+/* Sidebar */
+.toggle-nav-sidebar {
+    background-color: var(--light-bg-color);
+}
+
+/* Pagination */
+.paginator a:link, .paginator a:visited {
+    background: linear-gradient(to bottom, #fff 0%, #ddd 100%);
+}
+
+.paginator a:hover {
+    background: linear-gradient(to bottom, #f0f0f0 0%, #ccc 100%);
+}
+
+/* Forms */
+.form-row {
+    border-bottom: 1px solid var(--border-color);
+}
+
+fieldset.collapsed {
+    border: 1px solid var(--border-color);
+}
+
+/* Knowledge Management custom section */
+.module h2.knowledge-management {
+    background: linear-gradient(to right, #2c3e50, #4ca1af);
+}
+
+.knowledge-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.stat-box {
+    flex: 1;
+    min-width: 150px;
+    padding: 15px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e7eb 100%);
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.stat-label {
+    color: #7f8c8d;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+/* Status indicators */
+.status-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-active {
+    background-color: #2ecc71;
+}
+
+.status-pending {
+    background-color: #f39c12;
+}
+
+.status-failed {
+    background-color: #e74c3c;
+}
+
+.status-processing {
+    background-color: #3498db;
+} 
